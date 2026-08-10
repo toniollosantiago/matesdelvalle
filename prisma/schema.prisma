@@ -1,0 +1,69 @@
+datasource db {
+  provider = "sqlite"
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Category {
+  id          String    @id @default(cuid())
+  name        String
+  slug        String    @unique
+  description String?
+  products    Product[]
+}
+
+model Product {
+  id           String      @id @default(cuid())
+  name         String
+  slug         String      @unique
+  description  String?
+  price        Float
+  images       String      // JSON array of strings
+  categorySlug String
+  category     Category    @relation(fields: [categorySlug], references: [slug])
+  isFeatured   Boolean     @default(false)
+  inStock      Boolean     @default(true)
+  stockQuantity Int        @default(10)
+  inHeroLoop   Boolean     @default(false)
+  createdAt    DateTime    @default(now())
+  orderItems   OrderItem[]
+}
+
+model Order {
+  id          String      @id @default(cuid())
+  orderNumber Int         @default(1) @unique
+  createdAt   DateTime    @default(now())
+  status      String      @default("pending") // "pending" | "sold"
+  total       Float
+  items       OrderItem[]
+  clientNote  String?
+}
+
+model OrderItem {
+  id          String  @id @default(cuid())
+  orderId     String
+  order       Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId   String
+  product     Product @relation(fields: [productId], references: [id])
+  productName String  // snapshot del nombre al momento del pedido
+  productPrice Float  // snapshot del precio al momento del pedido
+  quantity    Int
+}
+
+model StoreConfig {
+  id             String  @id @default(cuid())
+  whatsappNumber String
+  shippingInfo   String
+  bannerMessage  String?
+}
+
+model AdminSession {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  email     String
+  createdAt DateTime @default(now())
+  expiresAt DateTime
+  used      Boolean  @default(false)
+}

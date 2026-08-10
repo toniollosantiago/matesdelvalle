@@ -1,0 +1,63 @@
+import { NextRequest, NextResponse } from 'next/server'
+import { checkRateLimit, getClientIp } from '@/lib/rate-limit'
+import { createMagicToken } from '@/lib/session'
+import { sendMagicLinkEmail } from '@/lib/mailer'
+
+export async function POST(request: NextRequest) {
+  const ip = getClientIp(request)
+
+  // Rate limit: 5 attempts per 15 minutes per IP
+  const rl = await checkRateLimit(`magic-link:${ip}`, {
+    maxRequests: 5,
+    windowMs: 15 * 60 * 1000,
+  })
+
+  if (!rl.allowed) {
+    return NextResponse.json(
+      { error: 'Demasiados intentos. Intentá de nuevo en unos minutos.' },
+      {
+        status: 429,
+        headers: { 'Retry-After': String(Math.ceil((rl.resetAt.getTime() - Date.now()) / 1000)) },
+      }
+    )
+  }
+
+  let body: unknown
+  try {
+    body = await request.json()
+  } catch {
+    return NextResponse.json({ error: 'Solicitud inválida.' }, { status: 400 })
+  }
+
+  const email =
+    body && typeof body === 'object' && 'email' in body && typeof body.email === 'string'
+      ? body.email.trim().toLowerCase()
+      : null
+
+  if (!email || !email.includes('@')) {
+    return NextResponse.json({ error: 'Email inválido.' }, { status: 400 })
+  }
+
+  const adminEmails = (process.env.ADMIN_EMAIL || '')
+    .split(',')
+    .map((e) => e.trim().toLowerCase())
+    .filter(Boolean)
+
+  // Always return the same response regardless of whether the email is authorized
+  // (prevents email enumeration)
+  if (!adminEmails.includes(email)) {
+    // Intentional delay to prevent timing attacks
+    await new Promise((r) => setTimeout(r, 500))
+    return NextResponse.json({ ok: true })
+  }
+
+  try {
+    const magicLink = await createMagicToken(email)
+    console.log('[magic-link] Generado magic link para:', email)
+    await sendMagicLinkEmail(email, magicLink)
+  } catch (err) {
+    console.error('[magic-link] ERROR CRÍTICO:', err)
+  }
+
+  return NextResponse.json({ ok: true })
+}

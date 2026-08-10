@@ -1,26 +1,99 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+@theme {
+  /* ── Brand Palette ── */
+  --color-background: #fbf9f5;
+  --color-surface: #fbf9f5;
+  --color-surface-bright: #fbf9f5;
+  --color-surface-dim: #dbdad6;
+  --color-surface-container-lowest: #ffffff;
+  --color-surface-container-low: #f5f3ef;
+  --color-surface-container: #efeeea;
+  --color-surface-container-high: #eae8e4;
+  --color-surface-container-highest: #e4e2de;
+  --color-surface-variant: #e4e2de;
+
+  --color-on-background: #1b1c1a;
+  --color-on-surface: #1b1c1a;
+  --color-on-surface-variant: #42484a;
+
+  /* Colors */
+  --color-primary: #5C663D; /* Olive Green */
+  --color-primary-container: #4A5330;
+  --color-on-primary: #ffffff;
+
+  --color-secondary: #2E5266; /* Lake Blue */
+  --color-secondary-container: #d3e6ed;
+  --color-on-secondary: #ffffff;
+
+  --color-tertiary: #5D4B3E; /* Warm Earth Brown CTA */
+  --color-on-tertiary: #ffffff;
+
+  --color-outline: #73787a;
+  --color-outline-variant: #c2c7ca;
+
+  /* Brand Colors */
+  --color-earth-brown: #5D4B3E;
+  --color-vibrant-olive: #5C663D;
+  --color-vibrant-blue: #2E5266;
+  --color-clay-text: #2B2B2B;
+  --color-washed-sky: #D1DBE0;
+
+  /* ── Font Families ── */
+  --font-sans: var(--font-montserrat), "Montserrat", ui-sans-serif, system-ui, sans-serif;
+  --font-caslon-family: var(--font-caslon), "Libre Caslon Text", ui-serif, serif;
+  --font-playfair-family: var(--font-playfair), "Playfair Display", ui-serif, serif;
+  --font-cormorant-family: var(--font-cormorant), "Cormorant Garamond", ui-serif, serif;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+/* ── Base ── */
+html { scroll-behavior: smooth; }
+
+body {
+  background-color: #fbf9f5;
+  color: #1b1c1a;
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+::selection {
+  background-color: #5C663D;
+  color: #ffffff;
+}
+
+.rustic-shadow {
+  box-shadow: 0 4px 32px 0 rgba(93, 75, 62, 0.06);
+}
+
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: #efeeea; }
+::-webkit-scrollbar-thumb { background: #5C663D; border-radius: 3px; }
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-slideDown {
+  animation: slideDown 0.25s ease-out forwards;
+}
+
+@keyframes flyToCart {
+  0% {
+    opacity: 1;
+    transform: translate(0, 0) scale(1.2);
+  }
+  50% {
+    opacity: 0.9;
+    transform: translate(25vw, -30vh) scale(0.9) rotate(15deg);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(45vw, -45vh) scale(0.2) rotate(45deg);
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+.animate-flyToCart {
+  animation: flyToCart 0.8s cubic-bezier(0.25, 1, 0.5, 1) forwards;
 }
