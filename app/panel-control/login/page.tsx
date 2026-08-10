@@ -67,21 +67,10 @@ export default function LoginPage({
               <div className="w-14 h-14 bg-[#eef1e6] rounded-full flex items-center justify-center mx-auto">
                 <CheckCircle className="w-7 h-7 text-[#5C663D]" />
               </div>
-              <h2 className="font-bold text-lg text-gray-800">Enlace listo</h2>
+              <h2 className="font-bold text-lg text-gray-800">Revisá tu email</h2>
               <p className="text-sm text-gray-500 leading-relaxed">
-                Se envió la notificación a tu correo y tenés el acceso directo habilitado aquí abajo:
+                Si el email está registrado, vas a recibir un link de acceso de inmediato. Válido por 15 minutos.
               </p>
-
-              {directLink && (
-                <div className="pt-2">
-                  <a
-                    href={directLink}
-                    className="w-full py-3 px-4 bg-[#5C663D] hover:bg-[#4B5432] text-white rounded-xl font-bold text-sm tracking-wide transition-all block text-center shadow-md"
-                  >
-                    🚀 Entrar al Panel de Control Ahora
-                  </a>
-                </div>
-              )}
               <button
                 onClick={() => setStatus('idle')}
                 className="text-xs text-[#5D4B3E] underline hover:opacity-70 transition-opacity"

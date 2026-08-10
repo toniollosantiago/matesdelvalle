@@ -4,7 +4,7 @@ import { prisma } from "@/lib/db";
 import Link from "next/link";
 import type { Metadata } from "next";
 
-export const dynamic = 'force-dynamic';
+export const revalidate = 300; // Cachear tienda por 5 minutos (ISR)
 
 export const metadata: Metadata = {
   title: "Tienda — Mates, Bombillas y Combos",
