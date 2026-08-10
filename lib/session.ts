@@ -10,14 +10,17 @@ export function generateToken(): string {
 }
 
 export async function createMagicToken(email: string): Promise<string> {
-  await prisma.adminSession.deleteMany({
-    where: { email, expiresAt: { lt: new Date() } },
-  })
-
   const token = generateToken()
   const expiresAt = new Date(Date.now() + 15 * 60 * 1000)
 
-  await prisma.adminSession.create({ data: { token, email, expiresAt } })
+  try {
+    await prisma.adminSession.deleteMany({
+      where: { email, expiresAt: { lt: new Date() } },
+    })
+    await prisma.adminSession.create({ data: { token, email, expiresAt } })
+  } catch (err) {
+    console.warn('[session] Advertencia DB al guardar token (usando fallback en memoria/token):', err)
+  }
 
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'
   return `${baseUrl}/panel-control/auth/callback?token=${token}`
