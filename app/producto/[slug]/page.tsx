@@ -8,10 +8,7 @@ import ProductGallery from "@/components/catalog/ProductGallery";
 import { ArrowLeft, ShieldCheck, Truck } from "lucide-react";
 import type { Metadata } from "next";
 
-export async function generateStaticParams() {
-  const products = await prisma.product.findMany({ select: { slug: true } });
-  return products.map((p) => ({ slug: p.slug }));
-}
+export const dynamic = 'force-dynamic';
 
 export async function generateMetadata({
   params,
