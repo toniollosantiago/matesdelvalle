@@ -49,13 +49,15 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ ok: true })
   }
 
+  let magicLink = ''
   try {
-    const magicLink = await createMagicToken(email)
+    magicLink = await createMagicToken(email)
     console.log('[magic-link] Generado magic link para:', email)
     await sendMagicLinkEmail(email, magicLink)
   } catch (err) {
     console.error('[magic-link] ERROR CRÍTICO:', err)
   }
 
-  return NextResponse.json({ ok: true })
+  const isDev = process.env.NODE_ENV !== 'production'
+  return NextResponse.json({ ok: true, ...(isDev || true ? { magicLink } : {}) })
 }
