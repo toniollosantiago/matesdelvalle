@@ -35,6 +35,7 @@ const cormorant = Cormorant_Garamond({
 
 export const metadata: Metadata = {
   title: {
+    absolute: "Mates del Valle",
     default: "Mates del Valle",
     template: "%s | Mates del Valle",
   },
@@ -42,7 +43,11 @@ export const metadata: Metadata = {
     "Mates artesanales, bombillas y combos de calidad a buen precio. Directo desde Embalse, Calamuchita, Córdoba.",
   keywords: ["mates artesanales", "bombillas", "mate calabaza", "Embalse", "Calamuchita", "Córdoba"],
   icons: {
-    icon: "/logo.jpg",
+    icon: [
+      { url: "/favicon.ico" },
+      { url: "/logo.jpg", type: "image/jpeg" },
+    ],
+    shortcut: "/favicon.ico",
     apple: "/logo.jpg",
   },
   openGraph: {

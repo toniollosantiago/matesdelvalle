@@ -5,7 +5,7 @@ import { ArrowRight, MessageCircle } from "lucide-react";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Mates del Valle — Mates artesanales en Embalse, Córdoba",
+  title: "Mates del Valle",
   description:
     "Mates artesanales, bombillas y combos de calidad a buen precio. Directo desde Embalse, Calamuchita, Córdoba.",
 };
