@@ -7,7 +7,9 @@ import type { Metadata } from "next";
 export const revalidate = 300; // Cachear tienda por 5 minutos (ISR)
 
 export const metadata: Metadata = {
-  title: "Tienda — Mates, Bombillas y Combos",
+  title: {
+    absolute: "Mates del Valle",
+  },
   description:
     "Explorá el catálogo completo de Mates del Valle: mates artesanales, bombillas y combos a precios accesibles.",
 };
