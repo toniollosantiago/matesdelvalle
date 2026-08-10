@@ -16,28 +16,41 @@ export default async function AdminDashboard() {
   const now = new Date()
   const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
 
-  const [
-    totalPending,
-    soldThisMonth,
-    revenueThisMonth,
-    outOfStockCount,
-    recentOrders,
-  ] = await Promise.all([
-    prisma.order.count({ where: { status: 'pending' } }),
-    prisma.order.count({ where: { status: 'sold', createdAt: { gte: startOfMonth } } }),
-    prisma.order.aggregate({
-      where: { status: 'sold', createdAt: { gte: startOfMonth } },
-      _sum: { total: true },
-    }),
-    prisma.product.count({ where: { inStock: false } }),
-    prisma.order.findMany({
-      include: { items: true },
-      orderBy: { createdAt: 'desc' },
-      take: 50,
-    }),
-  ])
+  let totalPending = 0
+  let soldThisMonth = 0
+  let outOfStockCount = 0
+  let recentOrders: Array<{
+    id: string;
+    orderNumber: number;
+    createdAt: Date;
+    status: string;
+    total: number;
+    clientNote: string | null;
+    items: Array<{ id: string; orderId: string; productId: string; productName: string; productPrice: number; quantity: number }>;
+  }> = []
 
-  const revenue = revenueThisMonth._sum.total ?? 0
+  try {
+    const res = await Promise.all([
+      prisma.order.count({ where: { status: 'pending' } }),
+      prisma.order.count({ where: { status: 'sold', createdAt: { gte: startOfMonth } } }),
+      prisma.order.aggregate({
+        where: { status: 'sold', createdAt: { gte: startOfMonth } },
+        _sum: { total: true },
+      }),
+      prisma.product.count({ where: { inStock: false } }),
+      prisma.order.findMany({
+        include: { items: true },
+        orderBy: { createdAt: 'desc' },
+        take: 50,
+      }),
+    ])
+    totalPending = res[0]
+    soldThisMonth = res[1]
+    outOfStockCount = res[3]
+    recentOrders = res[4]
+  } catch (err) {
+    console.error('Advertencia DB al cargar métricas del Panel Admin:', err)
+  }
 
   return (
     <div className="min-h-screen bg-[#F5F0E8]">
