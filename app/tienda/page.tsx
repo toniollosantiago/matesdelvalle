@@ -134,13 +134,17 @@ export default async function TiendaPage({ searchParams }: PageProps) {
 
   let products = INITIAL_CATALOG;
   try {
-    const dbProducts = await prisma.product.findMany({
+    const fetchPromise = prisma.product.findMany({
       where: {
         inStock: true,
         ...(categoria ? { categorySlug: categoria } : {}),
       },
       orderBy: { createdAt: "asc" },
     });
+    const timeoutPromise = new Promise<null>((resolve) => setTimeout(() => resolve(null), 300));
+    
+    const dbProducts = (await Promise.race([fetchPromise, timeoutPromise])) as typeof INITIAL_CATALOG | null;
+
     if (dbProducts && dbProducts.length > 0) {
       products = dbProducts.map((p) => ({
         id: p.id,

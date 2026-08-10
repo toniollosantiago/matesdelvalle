@@ -38,47 +38,25 @@ export async function sendMagicLinkEmail(email: string, magicLink: string): Prom
     </html>
   `
 
-  // Ejecutar envío por Resend y Formspree en paralelo para garantizar recepción veloz
-  const promises: Promise<unknown>[] = []
+  if (!resendApiKey) {
+    console.warn('[MagicLink Resend] RESEND_API_KEY no está configurada.')
+    return
+  }
 
-  if (resendApiKey) {
+  try {
     const resend = new Resend(resendApiKey)
     const fromSender = process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev'
-    promises.push(
-      resend.emails.send({
-        from: fromSender,
-        to: destinationEmail,
-        subject: '🔑 Link de acceso al Panel — Mates del Valle',
-        html: htmlContent,
-      }).then(res => {
-        console.log('[MagicLink Resend] Respuesta:', res)
-      }).catch(err => {
-        console.error('[MagicLink Resend] Error:', err)
-      })
-    )
-  }
+    console.log('[MagicLink Resend] Enviando únicamente por Resend a:', destinationEmail)
+    
+    const res = await resend.emails.send({
+      from: fromSender,
+      to: destinationEmail,
+      subject: '🔑 Link de acceso al Panel — Mates del Valle',
+      html: htmlContent,
+    })
 
-  const formspreeUrl = process.env.FORMSPREE_ENDPOINT
-  if (formspreeUrl) {
-    promises.push(
-      fetch(formspreeUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-        body: JSON.stringify({
-          email: destinationEmail,
-          _replyto: destinationEmail,
-          _subject: `🔑 Link de acceso al Panel Admin — ${destinationEmail}`,
-          Acceso: magicLink,
-          Mensaje: `Hacé click para ingresar: ${magicLink}`,
-          Nota: 'Válido por 15 minutos',
-        }),
-      }).then(res => {
-        console.log('[MagicLink Formspree] status:', res.status)
-      }).catch(err => {
-        console.error('[MagicLink Formspree] Error:', err)
-      })
-    )
+    console.log('[MagicLink Resend] Respuesta de Resend:', res)
+  } catch (err) {
+    console.error('[MagicLink Resend] Error al enviar email con Resend:', err)
   }
-
-  await Promise.allSettled(promises)
 }
