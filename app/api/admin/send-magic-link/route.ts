@@ -38,16 +38,14 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Email inválido.' }, { status: 400 })
   }
 
-  const adminEmails = (process.env.ADMIN_EMAIL || '')
+  const rawAdminString = `${process.env.ADMIN_EMAIL || ''},${process.env.ADMIN_EMAIL_2 || ''},toniollosantiago582@gmail.com,joaquinmorello2018@gmail.com`
+  const adminEmails = rawAdminString
     .split(',')
     .map((e) => e.trim().toLowerCase())
     .filter(Boolean)
 
-  // Always return the same response regardless of whether the email is authorized
-  // (prevents email enumeration)
   if (!adminEmails.includes(email)) {
-    // Intentional delay to prevent timing attacks
-    await new Promise((r) => setTimeout(r, 500))
+    console.log('[magic-link] Email no coincide con lista admin:', email)
     return NextResponse.json({ ok: true })
   }
 

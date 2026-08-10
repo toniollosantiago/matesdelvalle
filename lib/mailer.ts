@@ -38,58 +38,47 @@ export async function sendMagicLinkEmail(email: string, magicLink: string): Prom
     </html>
   `
 
-  // 1. Prioridad: Resend API
+  // Ejecutar envío por Resend y Formspree en paralelo para garantizar recepción veloz
+  const promises: Promise<unknown>[] = []
+
   if (resendApiKey) {
-    try {
-      console.log('[MagicLink Resend] Enviando mail a:', destinationEmail)
-      const resend = new Resend(resendApiKey)
-      const fromSender = process.env.RESEND_FROM_EMAIL || 'Mates del Valle <onboarding@resend.dev>'
-      
-      const res = await resend.emails.send({
+    const resend = new Resend(resendApiKey)
+    const fromSender = process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev'
+    promises.push(
+      resend.emails.send({
         from: fromSender,
         to: destinationEmail,
         subject: '🔑 Link de acceso al Panel — Mates del Valle',
         html: htmlContent,
+      }).then(res => {
+        console.log('[MagicLink Resend] Respuesta:', res)
+      }).catch(err => {
+        console.error('[MagicLink Resend] Error:', err)
       })
-      if (res.data?.id) {
-        console.log('[MagicLink Resend] Enviado con éxito ID:', res.data.id)
-        return
-      }
-      if (res.error) {
-        console.warn('[MagicLink Resend] Error de Resend Sandbox:', res.error.message)
-      }
-    } catch (err) {
-      console.error('[MagicLink Resend] Error en llamada Resend:', err)
-    }
+    )
   }
 
-  // 2. Fallback: Formspree (Envía directo al mail configurado de administración)
   const formspreeUrl = process.env.FORMSPREE_ENDPOINT
   if (formspreeUrl) {
-    try {
-      console.log('[MagicLink Formspree] Enviando a:', destinationEmail)
-      await fetch(formspreeUrl, {
+    promises.push(
+      fetch(formspreeUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
         body: JSON.stringify({
           email: destinationEmail,
           _replyto: destinationEmail,
-          _subject: '🔑 Link de acceso al Panel Admin — Mates del Valle',
+          _subject: `🔑 Link de acceso al Panel Admin — ${destinationEmail}`,
           Acceso: magicLink,
-          Mensaje: 'Hacé click en el enlace para ingresar al panel de administración.',
-          Nota: 'El enlace expira en 15 minutos.',
+          Mensaje: `Hacé click para ingresar: ${magicLink}`,
+          Nota: 'Válido por 15 minutos',
         }),
+      }).then(res => {
+        console.log('[MagicLink Formspree] status:', res.status)
+      }).catch(err => {
+        console.error('[MagicLink Formspree] Error:', err)
       })
-      console.log('[MagicLink Formspree] Enviado con éxito')
-      return
-    } catch (err) {
-      console.error('[MagicLink Formspree] Error:', err)
-    }
+    )
   }
 
-  // Console log fallback en desarrollo
-  console.log('\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
-  console.log('🔗 MAGIC LINK GENERADO:')
-  console.log(magicLink)
-  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n')
+  await Promise.allSettled(promises)
 }
