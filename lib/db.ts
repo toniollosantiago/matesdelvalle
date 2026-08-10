@@ -8,12 +8,12 @@ const globalForPrisma = globalThis as unknown as {
 }
 
 function createPrismaClient(): PrismaClient {
-  const dbUrl = process.env.DATABASE_URL || 'postgresql://postgres.ctqwuvahnxejvcpvjiny:Liosanti12@aws-0-sa-east-1.pooler.supabase.com:5432/postgres'
+  const dbUrl = process.env.DATABASE_URL || ''
   const pool = new Pool({
     connectionString: dbUrl,
-    connectionTimeoutMillis: 5000,
-    idleTimeoutMillis: 30000,
-    max: 10,
+    connectionTimeoutMillis: 1000,
+    idleTimeoutMillis: 5000,
+    max: 5,
   })
   const adapter = new PrismaPg(pool)
   return new PrismaClient({ adapter })
