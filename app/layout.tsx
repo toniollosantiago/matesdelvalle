@@ -75,6 +75,11 @@ export default function RootLayout({
       lang="es"
       className={`${montserrat.variable} ${caslon.variable} ${playfair.variable} ${cormorant.variable}`}
     >
+      <head>
+        <link rel="icon" href="/logo.jpg" type="image/jpeg" />
+        <link rel="shortcut icon" href="/logo.jpg" type="image/jpeg" />
+        <link rel="apple-touch-icon" href="/logo.jpg" />
+      </head>
       <body className="bg-background text-on-surface font-sans antialiased pt-16 flex flex-col min-h-screen">
         <Header />
         <div className="flex-grow flex flex-col">{children}</div>
