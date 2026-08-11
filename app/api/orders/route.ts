@@ -149,10 +149,19 @@ export async function POST(request: NextRequest) {
         }),
       })
       const dataForm = await resForm.json()
-      console.log('[Order Formspree] status:', resForm.status, dataForm)
+      console.log('[Order Formspree] Notificación enviada:', {
+        status: resForm.status,
+        order: orderCode,
+        response: dataForm,
+      })
     } catch (err) {
-      console.error('[Formspree] Error enviando email de compra:', err)
+      console.error('[Order Formspree] Error enviando email de compra:', err)
     }
+  } else {
+    console.warn(
+      '[Order Formspree] Notificación omitida: FORMSPREE_ENDPOINT no está configurada en este entorno.',
+      { order: orderCode }
+    )
   }
 
   return NextResponse.json({ ok: true, orderId, total: serverTotal }, { status: 201 })

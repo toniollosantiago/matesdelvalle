@@ -3,11 +3,9 @@ import dotenv from 'dotenv'
 
 dotenv.config()
 
-const isPostgres = process.env.DATABASE_URL?.startsWith('postgres')
-
 export default defineConfig({
   datasource: {
-    url: process.env.DATABASE_URL || 'file:./dev.db',
+    url: process.env.DATABASE_URL || 'postgresql://localhost:5432/postgres',
   },
   migrations: {
     seed: "ts-node prisma/seed.ts",

@@ -1,5 +1,5 @@
 import { ProductCard } from "@/components/catalog/ProductCard";
-import { prisma } from "@/lib/db";
+import { getCatalogProducts } from "@/lib/catalog";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
@@ -39,32 +39,7 @@ export default async function CategoriaPage({
   const { categoria } = await params;
   if (!VALID_CATEGORIES.includes(categoria as ValidCategory)) notFound();
 
-  let products: Array<{ id: string; name: string; price: number; images: string; categorySlug: string; slug: string; description: string | null; inStock: boolean }> = [];
-  try {
-    products = await prisma.product.findMany({
-      where: { categorySlug: categoria, inStock: true },
-      orderBy: { createdAt: "asc" },
-    });
-  } catch (err) {
-    console.error("Fallback a catálogo local en CategoriaPage:", err);
-  }
-
-  if (!products || products.length === 0) {
-    const INITIAL_CATALOG = [
-      { id: "prod-1", name: "Mate Camionero criollo de Calabaza", price: 13000, images: JSON.stringify(["/images/Mate Camionero criollo de Calabaza.png"]), categorySlug: "mates", slug: "mate-camionero-criollo-calabaza", description: "Mate camionero de calabaza.", inStock: true },
-      { id: "prod-2", name: "Mate Camionero Calabaza Liso con Virola de Acero", price: 18000, images: JSON.stringify(["/images/Mate Camionero Calabaza Liso con Virola de Acero.png"]), categorySlug: "mates", slug: "mate-camionero-calabaza-virola-acero", description: "Mate camionero clásico.", inStock: true },
-      { id: "prod-3", name: "Mate Camionero chico Calabaza Liso con Virola de Acero", price: 12000, images: JSON.stringify(["/images/Mate Camionero chico Calabaza Liso con Virola de Acero.png"]), categorySlug: "mates", slug: "mate-camionero-chico-calabaza", description: "Mate camionero chico.", inStock: true },
-      { id: "prod-4", name: "Mate Camionero Calabaza Liso con Virola de Acero Cincelada", price: 18000, images: JSON.stringify(["/images/Mate Camionero Calabaza Liso con Virola de Acero Cincelada.png"]), categorySlug: "mates", slug: "mate-camionero-virola-cincelada", description: "Mate camionero cincelado.", inStock: true },
-      { id: "prod-5", name: "Mate Camionero de Algarrobo Virola de Acero", price: 12000, images: JSON.stringify(["/images/Mate Camionero de Algarrobo Virola de Acero.png"]), categorySlug: "mates", slug: "mate-camionero-algarrobo", description: "Mate de algarrobo.", inStock: true },
-      { id: "prod-6", name: "Bombillas (surtido de modelos)", price: 4000, images: JSON.stringify(["/images/Bombillas.png"]), categorySlug: "bombillas", slug: "bombillas-surtido", description: "Bombillas surtidas.", inStock: true },
-      { id: "prod-7", name: "COMBO 1: Mate Camionero Calabaza Liso + Bombilla Pico de Loro", price: 22000, images: JSON.stringify(["/images/Mate Camionero Calabaza Liso con Virola de Acero.png"]), categorySlug: "combos", slug: "combo-1", description: "Combo 1.", inStock: true },
-      { id: "prod-8", name: "COMBO 2: Mate Imperial Liso + Bombilla Pico de Loro de Acero", price: 22000, images: JSON.stringify(["/images/Mate Camionero Calabaza Liso con Virola de Acero Cincelada.png"]), categorySlug: "combos", slug: "combo-2", description: "Combo 2.", inStock: true },
-      { id: "prod-9", name: "COMBO 3: Mate Camionero de Algarrobo + Bombilla Chata simple", price: 13500, images: JSON.stringify(["/images/Mate Camionero de Algarrobo Virola de Acero.png"]), categorySlug: "combos", slug: "combo-3", description: "Combo 3.", inStock: true },
-      { id: "prod-10", name: "COMBO 4: Mate Camionero chico + Bombilla Chata simple", price: 14000, images: JSON.stringify(["/images/Mate Camionero chico Calabaza Liso con Virola de Acero.png"]), categorySlug: "combos", slug: "combo-4", description: "Combo 4.", inStock: true },
-      { id: "prod-11", name: "COMBO 5: Mate Camionero criollo de Calabaza + Bombilla Pico de Loro", price: 16000, images: JSON.stringify(["/images/Mate Camionero criollo de Calabaza.png"]), categorySlug: "combos", slug: "combo-5", description: "Combo 5.", inStock: true }
-    ];
-    products = INITIAL_CATALOG.filter(p => p.categorySlug === categoria);
-  }
+  const products = await getCatalogProducts(categoria);
 
   const label = CATEGORY_LABELS[categoria as ValidCategory];
 

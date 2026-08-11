@@ -60,5 +60,5 @@ export async function POST(request: NextRequest) {
   }
 
   const isDev = process.env.NODE_ENV !== 'production'
-  return NextResponse.json({ ok: true, ...(isDev || true ? { magicLink } : {}) })
+  return NextResponse.json({ ok: true, ...(isDev ? { magicLink } : {}) })
 }

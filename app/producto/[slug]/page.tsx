@@ -1,127 +1,18 @@
-import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db";
+import { INITIAL_CATALOG } from "@/lib/catalog";
 import { parseImages, formatPrice } from "@/lib/format";
 import AddToCartButton from "@/components/catalog/AddToCartButton";
 import ProductGallery from "@/components/catalog/ProductGallery";
 import { ArrowLeft, ShieldCheck, Truck } from "lucide-react";
 import type { Metadata } from "next";
 
-export const dynamic = 'force-dynamic';
+export const revalidate = 300; // Cachear producto por 5 minutos (ISR)
 
-const INITIAL_PRODUCTS = [
-  {
-    id: "prod-1",
-    name: "Mate Camionero criollo de Calabaza",
-    price: 13000,
-    images: JSON.stringify(["/images/Mate Camionero criollo de Calabaza.png"]),
-    categorySlug: "mates",
-    slug: "mate-camionero-criollo-calabaza",
-    description: "Mate camionero de calabaza seleccionada con virola lisa de acero.",
-    inStock: true,
-  },
-  {
-    id: "prod-2",
-    name: "Mate Camionero Calabaza Liso con Virola de Acero",
-    price: 18000,
-    images: JSON.stringify(["/images/Mate Camionero Calabaza Liso con Virola de Acero.png"]),
-    categorySlug: "mates",
-    slug: "mate-camionero-calabaza-virola-acero",
-    description: "Mate camionero clásico de calabaza con virola lisa de acero.",
-    inStock: true,
-  },
-  {
-    id: "prod-3",
-    name: "Mate Camionero chico Calabaza Liso con Virola de Acero",
-    price: 12000,
-    images: JSON.stringify(["/images/Mate Camionero chico Calabaza Liso con Virola de Acero.png"]),
-    categorySlug: "mates",
-    slug: "mate-camionero-chico-calabaza",
-    description: "Mate camionero chico ideal para uso diario.",
-    inStock: true,
-  },
-  {
-    id: "prod-4",
-    name: "Mate Camionero Calabaza Liso con Virola de Acero Cincelada",
-    price: 18000,
-    images: JSON.stringify(["/images/Mate Camionero Calabaza Liso con Virola de Acero Cincelada.png"]),
-    categorySlug: "mates",
-    slug: "mate-camionero-virola-cincelada",
-    description: "Mate camionero con virola trabajada y cincelada.",
-    inStock: true,
-  },
-  {
-    id: "prod-5",
-    name: "Mate Camionero de Algarrobo Virola de Acero",
-    price: 12000,
-    images: JSON.stringify(["/images/Mate Camionero de Algarrobo Virola de Acero.png"]),
-    categorySlug: "mates",
-    slug: "mate-camionero-algarrobo",
-    description: "Mate de algarrobo macizo con virola de acero.",
-    inStock: true,
-  },
-  {
-    id: "prod-6",
-    name: "Bombillas (surtido de modelos)",
-    price: 4000,
-    images: JSON.stringify(["/images/Bombillas.png"]),
-    categorySlug: "bombillas",
-    slug: "bombillas-surtido",
-    description: "Bombillas de alpaca y acero inoxidable surtidas.",
-    inStock: true,
-  },
-  {
-    id: "prod-7",
-    name: "COMBO 1: Mate Camionero Calabaza Liso + Bombilla Pico de Loro",
-    price: 22000,
-    images: JSON.stringify(["/images/Mate Camionero Calabaza Liso con Virola de Acero.png"]),
-    categorySlug: "combos",
-    slug: "combo-1",
-    description: "Combo listo para usar con bombilla pico de loro.",
-    inStock: true,
-  },
-  {
-    id: "prod-8",
-    name: "COMBO 2: Mate Imperial Liso + Bombilla Pico de Loro de Acero",
-    price: 22000,
-    images: JSON.stringify(["/images/Mate Camionero Calabaza Liso con Virola de Acero Cincelada.png"]),
-    categorySlug: "combos",
-    slug: "combo-2",
-    description: "Combo premium con mate imperial.",
-    inStock: true,
-  },
-  {
-    id: "prod-9",
-    name: "COMBO 3: Mate Camionero de Algarrobo + Bombilla Chata simple",
-    price: 13500,
-    images: JSON.stringify(["/images/Mate Camionero de Algarrobo Virola de Acero.png"]),
-    categorySlug: "combos",
-    slug: "combo-3",
-    description: "Combo rústico de algarrobo.",
-    inStock: true,
-  },
-  {
-    id: "prod-10",
-    name: "COMBO 4: Mate Camionero chico + Bombilla Chata simple",
-    price: 14000,
-    images: JSON.stringify(["/images/Mate Camionero chico Calabaza Liso con Virola de Acero.png"]),
-    categorySlug: "combos",
-    slug: "combo-4",
-    description: "Combo práctico mate chico.",
-    inStock: true,
-  },
-  {
-    id: "prod-11",
-    name: "COMBO 5: Mate Camionero criollo de Calabaza + Bombilla Pico de Loro",
-    price: 16000,
-    images: JSON.stringify(["/images/Mate Camionero criollo de Calabaza.png"]),
-    categorySlug: "combos",
-    slug: "combo-5",
-    description: "Combo tradicional criollo.",
-    inStock: true,
-  },
-];
+export function generateStaticParams() {
+  return INITIAL_CATALOG.map((p) => ({ slug: p.slug }));
+}
 
 async function getProductBySlug(slug: string) {
   try {
@@ -130,7 +21,7 @@ async function getProductBySlug(slug: string) {
   } catch (e) {
     console.error("Error consultando producto en DB:", e);
   }
-  const found = INITIAL_PRODUCTS.find((p) => p.slug === slug);
+  const found = INITIAL_CATALOG.find((p) => p.slug === slug);
   if (found) {
     return {
       ...found,

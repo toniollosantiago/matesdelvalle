@@ -1,9 +1,7 @@
 import { Resend } from 'resend'
-import nodemailer from 'nodemailer'
 
 /**
- * Sends the magic link email to the admin.
- * Uses Resend API if RESEND_API_KEY is configured, or SMTP / Formspree as fallback.
+ * Sends the magic link email to the admin via Resend.
  */
 export async function sendMagicLinkEmail(email: string, magicLink: string): Promise<void> {
   const resendApiKey = process.env.RESEND_API_KEY
@@ -39,15 +37,14 @@ export async function sendMagicLinkEmail(email: string, magicLink: string): Prom
   `
 
   if (!resendApiKey) {
-    console.warn('[MagicLink Resend] RESEND_API_KEY no está configurada.')
+    console.warn('[MagicLink Resend] RESEND_API_KEY no está configurada. El email NO fue enviado a', destinationEmail)
     return
   }
 
   try {
     const resend = new Resend(resendApiKey)
     const fromSender = process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev'
-    console.log('[MagicLink Resend] Enviando únicamente por Resend a:', destinationEmail)
-    
+
     const res = await resend.emails.send({
       from: fromSender,
       to: destinationEmail,
@@ -55,7 +52,16 @@ export async function sendMagicLinkEmail(email: string, magicLink: string): Prom
       html: htmlContent,
     })
 
-    console.log('[MagicLink Resend] Respuesta de Resend:', res)
+    if (res.error) {
+      console.error('[MagicLink Resend] Resend devolvió un error para', destinationEmail, ':', {
+        name: res.error.name,
+        message: res.error.message,
+        statusCode: res.error.statusCode,
+      })
+      return
+    }
+
+    console.log('[MagicLink Resend] Email enviado OK:', { id: res.data?.id, to: destinationEmail, from: fromSender })
   } catch (err) {
     console.error('[MagicLink Resend] Error al enviar email con Resend:', err)
   }

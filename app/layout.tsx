@@ -44,10 +44,10 @@ export const metadata: Metadata = {
   keywords: ["mates artesanales", "bombillas", "mate calabaza", "Embalse", "Calamuchita", "Córdoba"],
   icons: {
     icon: [
+      { url: "/icon.svg", type: "image/svg+xml" },
       { url: "/favicon.ico" },
-      { url: "/logo.jpg", type: "image/jpeg" },
     ],
-    shortcut: "/favicon.ico",
+    shortcut: "/icon.svg",
     apple: "/logo.jpg",
   },
   openGraph: {

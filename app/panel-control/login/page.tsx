@@ -77,6 +77,18 @@ export default function LoginPage({
               >
                 Volver a intentar
               </button>
+
+              {directLink && (
+                <div className="pt-2">
+                  <a
+                    href={directLink}
+                    className="inline-block w-full py-3 bg-[#5C663D] hover:bg-[#4A5330] text-white rounded-xl font-bold text-sm tracking-wide transition-all"
+                  >
+                    Abrir link directo
+                  </a>
+                  <p className="text-[10px] text-gray-400 mt-2">Solo para testing — en producción se oculta</p>
+                </div>
+              )}
             </div>
           ) : (
             <form onSubmit={handleSubmit} className="space-y-5">

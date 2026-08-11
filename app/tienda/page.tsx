@@ -1,6 +1,6 @@
 import { ProductCard } from "@/components/catalog/ProductCard";
 import CategoryFilterMobile from "@/components/catalog/CategoryFilterMobile";
-import { prisma } from "@/lib/db";
+import { getCatalogProducts } from "@/lib/catalog";
 import Link from "next/link";
 import type { Metadata } from "next";
 
@@ -14,158 +14,8 @@ export const metadata: Metadata = {
     "Explorá el catálogo completo de Mates del Valle: mates artesanales, bombillas y combos a precios accesibles.",
 };
 
-const INITIAL_CATALOG = [
-  {
-    id: "prod-1",
-    name: "Mate Camionero criollo de Calabaza",
-    price: 13000,
-    images: JSON.stringify(["/images/Mate Camionero criollo de Calabaza.png"]),
-    categorySlug: "mates",
-    slug: "mate-camionero-criollo-calabaza",
-    description: "Mate camionero de calabaza seleccionada con virola lisa de acero.",
-    inStock: true,
-  },
-  {
-    id: "prod-2",
-    name: "Mate Camionero Calabaza Liso con Virola de Acero",
-    price: 18000,
-    images: JSON.stringify(["/images/Mate Camionero Calabaza Liso con Virola de Acero.png"]),
-    categorySlug: "mates",
-    slug: "mate-camionero-calabaza-virola-acero",
-    description: "Mate camionero clásico de calabaza con virola lisa de acero.",
-    inStock: true,
-  },
-  {
-    id: "prod-3",
-    name: "Mate Camionero chico Calabaza Liso con Virola de Acero",
-    price: 12000,
-    images: JSON.stringify(["/images/Mate Camionero chico Calabaza Liso con Virola de Acero.png"]),
-    categorySlug: "mates",
-    slug: "mate-camionero-chico-calabaza",
-    description: "Mate camionero chico ideal para uso diario.",
-    inStock: true,
-  },
-  {
-    id: "prod-4",
-    name: "Mate Camionero Calabaza Liso con Virola de Acero Cincelada",
-    price: 18000,
-    images: JSON.stringify(["/images/Mate Camionero Calabaza Liso con Virola de Acero Cincelada.png"]),
-    categorySlug: "mates",
-    slug: "mate-camionero-virola-cincelada",
-    description: "Mate camionero con virola trabajada y cincelada.",
-    inStock: true,
-  },
-  {
-    id: "prod-5",
-    name: "Mate Camionero de Algarrobo Virola de Acero",
-    price: 12000,
-    images: JSON.stringify(["/images/Mate Camionero de Algarrobo Virola de Acero.png"]),
-    categorySlug: "mates",
-    slug: "mate-camionero-algarrobo",
-    description: "Mate de algarrobo macizo con virola de acero.",
-    inStock: true,
-  },
-  {
-    id: "prod-6",
-    name: "Bombillas (surtido de modelos)",
-    price: 4000,
-    images: JSON.stringify(["/images/Bombillas.png"]),
-    categorySlug: "bombillas",
-    slug: "bombillas-surtido",
-    description: "Bombillas de alpaca y acero inoxidable surtidas.",
-    inStock: true,
-  },
-  {
-    id: "prod-7",
-    name: "COMBO 1: Mate Camionero Calabaza Liso + Bombilla Pico de Loro",
-    price: 22000,
-    images: JSON.stringify(["/images/Mate Camionero Calabaza Liso con Virola de Acero.png"]),
-    categorySlug: "combos",
-    slug: "combo-1",
-    description: "Combo listo para usar con bombilla pico de loro.",
-    inStock: true,
-  },
-  {
-    id: "prod-8",
-    name: "COMBO 2: Mate Imperial Liso + Bombilla Pico de Loro de Acero",
-    price: 22000,
-    images: JSON.stringify(["/images/Mate Camionero Calabaza Liso con Virola de Acero Cincelada.png"]),
-    categorySlug: "combos",
-    slug: "combo-2",
-    description: "Combo premium con mate imperial.",
-    inStock: true,
-  },
-  {
-    id: "prod-9",
-    name: "COMBO 3: Mate Camionero de Algarrobo + Bombilla Chata simple",
-    price: 13500,
-    images: JSON.stringify(["/images/Mate Camionero de Algarrobo Virola de Acero.png"]),
-    categorySlug: "combos",
-    slug: "combo-3",
-    description: "Combo rústico de algarrobo.",
-    inStock: true,
-  },
-  {
-    id: "prod-10",
-    name: "COMBO 4: Mate Camionero chico + Bombilla Chata simple",
-    price: 14000,
-    images: JSON.stringify(["/images/Mate Camionero chico Calabaza Liso con Virola de Acero.png"]),
-    categorySlug: "combos",
-    slug: "combo-4",
-    description: "Combo práctico mate chico.",
-    inStock: true,
-  },
-  {
-    id: "prod-11",
-    name: "COMBO 5: Mate Camionero criollo de Calabaza + Bombilla Pico de Loro",
-    price: 16000,
-    images: JSON.stringify(["/images/Mate Camionero criollo de Calabaza.png"]),
-    categorySlug: "combos",
-    slug: "combo-5",
-    description: "Combo tradicional criollo.",
-    inStock: true,
-  },
-];
-
-interface PageProps {
-  searchParams: Promise<{ categoria?: string }>;
-}
-
-export default async function TiendaPage({ searchParams }: PageProps) {
-  const { categoria } = await searchParams;
-
-  let products = INITIAL_CATALOG;
-  try {
-    const fetchPromise = prisma.product.findMany({
-      where: {
-        inStock: true,
-        ...(categoria ? { categorySlug: categoria } : {}),
-      },
-      orderBy: { createdAt: "asc" },
-    });
-    const timeoutPromise = new Promise<null>((resolve) => setTimeout(() => resolve(null), 300));
-    
-    const dbProducts = (await Promise.race([fetchPromise, timeoutPromise])) as typeof INITIAL_CATALOG | null;
-
-    if (dbProducts && dbProducts.length > 0) {
-      products = dbProducts.map((p) => ({
-        id: p.id,
-        name: p.name,
-        price: p.price,
-        images: typeof p.images === 'string' ? p.images : JSON.stringify(p.images),
-        categorySlug: p.categorySlug,
-        slug: p.slug,
-        description: p.description || '',
-        inStock: p.inStock,
-      }));
-    }
-  } catch (e) {
-    console.error("Fallback a catálogo local en TiendaPage:", e);
-  }
-
-  if (categoria) {
-    products = products.filter((p) => p.categorySlug === categoria);
-  }
+export default async function TiendaPage() {
+  const products = await getCatalogProducts();
 
   const totalCount = products.length;
   const SIDEBAR_CATS = [
@@ -189,7 +39,7 @@ export default async function TiendaPage({ searchParams }: PageProps) {
         </div>
 
         <div className="lg:hidden mb-4">
-          <CategoryFilterMobile categories={SIDEBAR_CATS} currentCategory={categoria ?? ""} />
+          <CategoryFilterMobile categories={SIDEBAR_CATS} currentCategory="" />
         </div>
 
         <div className="flex flex-col lg:flex-row gap-6 items-start">
@@ -199,7 +49,7 @@ export default async function TiendaPage({ searchParams }: PageProps) {
             </h3>
             <ul className="space-y-2 font-sans text-xs text-on-surface-variant">
               {SIDEBAR_CATS.map((cat) => {
-                const isActive = (categoria ?? "") === cat.slug;
+                const isActive = "" === cat.slug;
                 return (
                   <li key={cat.slug}>
                     <Link
