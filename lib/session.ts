@@ -24,7 +24,7 @@ export async function createMagicToken(email: string, requestUrl?: string): Prom
 
   let baseUrl = ''
 
-  // 1. Si viene el origin de la solicitud HTTP (ej: https://matesdelvalle.vercel.app), usarlo con prioridad máxima
+  // 1. Si viene el origin de la solicitud HTTP del cliente en producción, usarlo con prioridad máxima
   if (requestUrl && !requestUrl.includes('localhost')) {
     baseUrl = requestUrl
   } 
@@ -32,16 +32,19 @@ export async function createMagicToken(email: string, requestUrl?: string): Prom
   else if (process.env.NEXT_PUBLIC_SITE_URL && !process.env.NEXT_PUBLIC_SITE_URL.includes('localhost')) {
     baseUrl = process.env.NEXT_PUBLIC_SITE_URL
   } 
-  // 3. Fallback de producción Vercel
-  else if (process.env.VERCEL_URL) {
-    baseUrl = `https://${process.env.VERCEL_URL}`
-  } 
-  // 4. Default si proviene de navegador web real en producción
+  // 3. Soporte para Netlify (process.env.URL o DEPLOY_PRIME_URL)
+  else if (process.env.URL) {
+    baseUrl = process.env.URL
+  }
+  else if (process.env.DEPLOY_PRIME_URL) {
+    baseUrl = process.env.DEPLOY_PRIME_URL
+  }
+  // 4. Default dinámico si proviene de navegador web real
   else if (requestUrl) {
     baseUrl = requestUrl
   } 
   else {
-    baseUrl = 'https://matesdelvalle.vercel.app'
+    baseUrl = 'https://gregarious-bavarois-e8c4bf.netlify.app'
   }
 
   return `${baseUrl}/panel-control/auth/callback?token=${token}`

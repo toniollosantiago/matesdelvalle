@@ -8,7 +8,15 @@ export async function GET() {
     return NextResponse.json({ error: 'No autorizado.' }, { status: 401 })
   }
 
-  let orders = []
+  let orders: Array<{
+    id: string;
+    orderNumber: number;
+    createdAt: Date;
+    status: string;
+    total: number;
+    clientNote: string | null;
+    items: Array<{ id: string; orderId: string; productId: string; productName: string; productPrice: number; quantity: number }>;
+  }> = []
   try {
     orders = await prisma.order.findMany({
       include: { items: true },
