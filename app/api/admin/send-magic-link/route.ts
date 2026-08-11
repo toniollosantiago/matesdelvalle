@@ -51,8 +51,9 @@ export async function POST(request: NextRequest) {
 
   let magicLink = ''
   try {
-    magicLink = await createMagicToken(email)
-    console.log('[magic-link] Generado magic link para:', email)
+    const origin = request.headers.get('origin') || `${request.nextUrl.protocol}//${request.nextUrl.host}`
+    magicLink = await createMagicToken(email, origin)
+    console.log('[magic-link] Generado magic link para:', email, 'URL:', magicLink)
     await sendMagicLinkEmail(email, magicLink)
   } catch (err) {
     console.error('[magic-link] ERROR CRÍTICO:', err)

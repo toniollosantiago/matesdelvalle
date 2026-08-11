@@ -9,7 +9,7 @@ export function generateToken(): string {
   return crypto.randomBytes(48).toString('hex')
 }
 
-export async function createMagicToken(email: string): Promise<string> {
+export async function createMagicToken(email: string, requestUrl?: string): Promise<string> {
   const token = generateToken()
   const expiresAt = new Date(Date.now() + 15 * 60 * 1000)
 
@@ -22,7 +22,14 @@ export async function createMagicToken(email: string): Promise<string> {
     console.warn('[session] Advertencia DB al guardar token (usando fallback en memoria/token):', err)
   }
 
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'
+  let baseUrl = process.env.NEXT_PUBLIC_SITE_URL || ''
+  if (requestUrl && (!baseUrl || baseUrl.includes('localhost'))) {
+    baseUrl = requestUrl
+  }
+  if (!baseUrl) {
+    baseUrl = 'https://matesdelvalle.vercel.app'
+  }
+
   return `${baseUrl}/panel-control/auth/callback?token=${token}`
 }
 
