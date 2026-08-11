@@ -22,11 +22,25 @@ export async function createMagicToken(email: string, requestUrl?: string): Prom
     console.warn('[session] Advertencia DB al guardar token (usando fallback en memoria/token):', err)
   }
 
-  let baseUrl = process.env.NEXT_PUBLIC_SITE_URL || ''
-  if (requestUrl && (!baseUrl || baseUrl.includes('localhost'))) {
+  let baseUrl = ''
+
+  // 1. Si viene el origin de la solicitud HTTP (ej: https://matesdelvalle.vercel.app), usarlo con prioridad máxima
+  if (requestUrl && !requestUrl.includes('localhost')) {
     baseUrl = requestUrl
-  }
-  if (!baseUrl) {
+  } 
+  // 2. Si existe la variable pública de entorno configurada
+  else if (process.env.NEXT_PUBLIC_SITE_URL && !process.env.NEXT_PUBLIC_SITE_URL.includes('localhost')) {
+    baseUrl = process.env.NEXT_PUBLIC_SITE_URL
+  } 
+  // 3. Fallback de producción Vercel
+  else if (process.env.VERCEL_URL) {
+    baseUrl = `https://${process.env.VERCEL_URL}`
+  } 
+  // 4. Default si proviene de navegador web real en producción
+  else if (requestUrl) {
+    baseUrl = requestUrl
+  } 
+  else {
     baseUrl = 'https://matesdelvalle.vercel.app'
   }
 
