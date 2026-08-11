@@ -8,10 +8,15 @@ export async function GET() {
     return NextResponse.json({ error: 'No autorizado.' }, { status: 401 })
   }
 
-  const orders = await prisma.order.findMany({
-    include: { items: true },
-    orderBy: { createdAt: 'desc' },
-  })
+  let orders = []
+  try {
+    orders = await prisma.order.findMany({
+      include: { items: true },
+      orderBy: { createdAt: 'desc' },
+    })
+  } catch (err) {
+    console.error('Error DB en /api/admin/orders:', err)
+  }
 
   return NextResponse.json({ orders })
 }
