@@ -1,47 +1,41 @@
 'use client'
 
 import { useState } from 'react'
-import { Loader2, Mail, CheckCircle, AlertCircle } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import { Loader2, Lock, AlertCircle, ShieldCheck } from 'lucide-react'
 import Image from 'next/image'
 
-export default function LoginPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ error?: string }>
-}) {
-  const [email, setEmail] = useState('')
-  const [status, setStatus] = useState<'idle' | 'loading' | 'sent' | 'error'>('idle')
+export default function LoginPage() {
+  const router = useRouter()
+  const [pin, setPin] = useState('')
+  const [status, setStatus] = useState<'idle' | 'loading' | 'error'>('idle')
   const [errorMsg, setErrorMsg] = useState('')
-  const [directLink, setDirectLink] = useState('')
-
-  // Token error from URL (handled client-side for simplicity)
-  // We'll handle it via the form state
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    if (!email.trim()) return
+    if (!pin.trim()) return
 
     setStatus('loading')
     setErrorMsg('')
 
     try {
-      const res = await fetch('/api/admin/send-magic-link', {
+      const res = await fetch('/api/admin/auth/pin', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: email.trim() }),
+        body: JSON.stringify({ pin: pin.trim() }),
       })
 
-      if (res.status === 429) {
+      const data = await res.json()
+
+      if (!res.ok) {
         setStatus('error')
-        setErrorMsg('Demasiados intentos. Esperá unos minutos.')
+        setErrorMsg(data.error || 'PIN incorrecto.')
         return
       }
 
-      const data = await res.json()
-      if (data.magicLink) {
-        setDirectLink(data.magicLink)
-      }
-      setStatus('sent')
+      // Redirigir al panel de administración
+      router.push('/panel-control')
+      router.refresh()
     } catch {
       setStatus('error')
       setErrorMsg('Error de conexión. Intentá de nuevo.')
@@ -62,86 +56,60 @@ export default function LoginPage({
 
         {/* Card */}
         <div className="bg-white rounded-2xl shadow-sm border border-[#e8e2d8] p-8">
-          {status === 'sent' ? (
-            <div className="text-center space-y-4">
-              <div className="w-14 h-14 bg-[#eef1e6] rounded-full flex items-center justify-center mx-auto">
-                <CheckCircle className="w-7 h-7 text-[#5C663D]" />
+          <form onSubmit={handleSubmit} className="space-y-5">
+            <div>
+              <div className="flex items-center gap-2 mb-1">
+                <ShieldCheck className="w-5 h-5 text-[#5C663D]" />
+                <h2 className="font-bold text-xl text-gray-800">Acceso Seguro</h2>
               </div>
-              <h2 className="font-bold text-lg text-gray-800">Revisá tu email</h2>
-              <p className="text-sm text-gray-500 leading-relaxed">
-                Si el email está registrado, vas a recibir un link de acceso de inmediato. Válido por 15 minutos.
+              <p className="text-sm text-gray-500">
+                Ingresá la clave PIN de administrador.
               </p>
-              <button
-                onClick={() => setStatus('idle')}
-                className="text-xs text-[#5D4B3E] underline hover:opacity-70 transition-opacity"
-              >
-                Volver a intentar
-              </button>
-
-              {directLink && (
-                <div className="pt-2">
-                  <a
-                    href={directLink}
-                    className="inline-block w-full py-3 bg-[#5C663D] hover:bg-[#4A5330] text-white rounded-xl font-bold text-sm tracking-wide transition-all"
-                  >
-                    Abrir link directo
-                  </a>
-                  <p className="text-[10px] text-gray-400 mt-2">Solo para testing — en producción se oculta</p>
-                </div>
-              )}
             </div>
-          ) : (
-            <form onSubmit={handleSubmit} className="space-y-5">
-              <div>
-                <h2 className="font-bold text-xl text-gray-800 mb-1">Acceder</h2>
-                <p className="text-sm text-gray-500">
-                  Ingresá tu email para recibir un link de acceso seguro.
-                </p>
-              </div>
 
-              {(status === 'error') && (
-                <div className="flex items-center gap-2 bg-red-50 border border-red-200 rounded-xl px-4 py-3">
-                  <AlertCircle className="w-4 h-4 text-red-500 shrink-0" />
-                  <p className="text-xs text-red-700">{errorMsg || 'El link expiró o ya fue usado.'}</p>
-                </div>
+            {status === 'error' && (
+              <div className="flex items-center gap-2 bg-red-50 border border-red-200 rounded-xl px-4 py-3">
+                <AlertCircle className="w-4 h-4 text-red-500 shrink-0" />
+                <p className="text-xs text-red-700">{errorMsg}</p>
+              </div>
+            )}
+
+            <div>
+              <label htmlFor="pin" className="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-1.5">
+                PIN de Administrador
+              </label>
+              <div className="relative">
+                <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <input
+                  id="pin"
+                  type="password"
+                  autoFocus
+                  maxLength={12}
+                  value={pin}
+                  onChange={(e) => setPin(e.target.value)}
+                  placeholder="••••••••"
+                  required
+                  className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 text-base tracking-widest focus:outline-none focus:ring-2 focus:ring-[#5C663D] focus:border-transparent bg-[#fafaf9] transition"
+                />
+              </div>
+            </div>
+
+            <button
+              type="submit"
+              disabled={status === 'loading' || !pin.trim()}
+              className="w-full py-3.5 bg-[#5C663D] hover:bg-[#4A5038] text-white rounded-xl font-bold text-sm tracking-wide transition-all disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-sm"
+            >
+              {status === 'loading' ? (
+                <><Loader2 className="w-4 h-4 animate-spin" /> Verificando...</>
+              ) : (
+                'Ingresar al Panel'
               )}
-
-              <div>
-                <label htmlFor="email" className="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-1.5">
-                  Email
-                </label>
-                <div className="relative">
-                  <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                  <input
-                    id="email"
-                    type="email"
-                    autoComplete="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="tu@email.com"
-                    required
-                    className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#5C663D] focus:border-transparent bg-[#fafaf9] transition"
-                  />
-                </div>
-              </div>
-
-              <button
-                type="submit"
-                disabled={status === 'loading'}
-                className="w-full py-3.5 bg-[#5D4B3E] hover:bg-[#4A3B32] text-white rounded-xl font-bold text-sm tracking-wide transition-all disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-              >
-                {status === 'loading' ? (
-                  <><Loader2 className="w-4 h-4 animate-spin" /> Enviando...</>
-                ) : (
-                  'Enviar link de acceso'
-                )}
-              </button>
-            </form>
-          )}
+            </button>
+          </form>
         </div>
 
-        <p className="text-center text-xs text-gray-400 mt-6">
-          Solo para uso interno — Mates del Valle
+        <p className="text-center text-xs text-gray-400 mt-6 flex items-center justify-center gap-1">
+          <Lock className="w-3 h-3" /> Encriptación de grado militar (HMAC-SHA256 Timing-Safe)
         </p>
       </div>
     </div>
