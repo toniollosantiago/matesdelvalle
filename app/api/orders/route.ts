@@ -87,6 +87,8 @@ export async function POST(request: NextRequest) {
       id: item.id,
       name: item.id.replace(/-/g, ' ').toUpperCase(),
       price: 15000,
+      slug: item.id,
+      stockQuantity: 10,
     }))
   }
 
