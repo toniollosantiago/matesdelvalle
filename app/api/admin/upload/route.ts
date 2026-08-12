@@ -42,18 +42,21 @@ export async function POST(request: NextRequest) {
     const ext = file.name.split('.').pop()?.toLowerCase() || 'png'
     const fileName = `prod_${Date.now()}_${crypto.randomUUID().slice(0, 8)}.${ext}`
 
-    // Asegurar directorio public/images
-    const uploadDir = path.join(process.cwd(), 'public', 'images')
-    await mkdir(uploadDir, { recursive: true })
-
-    const filePath = path.join(uploadDir, fileName)
-    await writeFile(filePath, buffer)
-
-    const publicUrl = `/images/${fileName}`
-
-    return NextResponse.json({ ok: true, url: publicUrl })
+    try {
+      const uploadDir = path.join(process.cwd(), 'public', 'images')
+      await mkdir(uploadDir, { recursive: true })
+      const filePath = path.join(uploadDir, fileName)
+      await writeFile(filePath, buffer)
+      const publicUrl = `/images/${fileName}`
+      return NextResponse.json({ ok: true, url: publicUrl })
+    } catch (fsErr) {
+      console.warn('[Upload] Archivo estático de solo lectura en servidor (Netlify/Vercel), usando Data URL:', fsErr)
+      const base64 = buffer.toString('base64')
+      const dataUrl = `data:${file.type};base64,${base64}`
+      return NextResponse.json({ ok: true, url: dataUrl })
+    }
   } catch (err) {
-    console.error('[Upload] Error guardando archivo:', err)
+    console.error('[Upload] Error procesando la imagen:', err)
     return NextResponse.json({ error: 'Error al procesar la imagen.' }, { status: 500 })
   }
 }

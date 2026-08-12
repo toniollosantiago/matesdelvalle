@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { revalidatePath } from 'next/cache'
 import { getAdminSession } from '@/lib/session'
 import { prisma } from '@/lib/db'
 
@@ -64,6 +65,10 @@ export async function PUT(request: NextRequest, context: RouteContext) {
     include: { category: true },
   })
 
+  revalidatePath('/', 'layout')
+  revalidatePath('/tienda')
+  revalidatePath(`/producto/${updated.slug}`)
+
   return NextResponse.json({ product: updated })
 }
 
@@ -81,6 +86,9 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
   }
 
   await prisma.product.delete({ where: { id } })
+
+  revalidatePath('/', 'layout')
+  revalidatePath('/tienda')
 
   return NextResponse.json({ ok: true })
 }
