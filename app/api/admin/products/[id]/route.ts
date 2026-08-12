@@ -46,7 +46,14 @@ export async function PUT(request: NextRequest, context: RouteContext) {
     }
   }
 
-  const stockQuantity = typeof data.stockQuantity === 'number' ? data.stockQuantity : parseInt(String(data.stockQuantity)) ?? (existing as any).stockQuantity ?? 10
+  let stockQuantity = existing.stockQuantity ?? 10
+  if (typeof data.stockQuantity === 'number') {
+    stockQuantity = data.stockQuantity
+  } else if (data.stockQuantity !== undefined && data.stockQuantity !== null) {
+    const parsed = parseInt(String(data.stockQuantity), 10)
+    if (!isNaN(parsed)) stockQuantity = parsed
+  }
+
   const finalInStock = typeof data.inStock === 'boolean' ? data.inStock : stockQuantity > 0
 
   const updated = await prisma.product.update({

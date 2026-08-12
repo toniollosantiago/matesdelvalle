@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { revalidatePath } from 'next/cache'
 import { prisma } from '@/lib/db'
 import { checkRateLimit, getClientIp } from '@/lib/rate-limit'
 
@@ -66,10 +67,15 @@ export async function POST(request: NextRequest) {
 
   // Fetch products from DB or fallback catalog
   const productIds = clientItems.map((i) => i.id)
-  let products: Array<{ id: string; name: string; price: number }> = []
+  let products: Array<{ id: string; name: string; price: number; slug: string; stockQuantity: number }> = []
   try {
     products = await prisma.product.findMany({
-      where: { id: { in: productIds } },
+      where: {
+        OR: [
+          { id: { in: productIds } },
+          { slug: { in: productIds } },
+        ]
+      },
     })
   } catch (err) {
     console.error('Error buscando productos en DB para orden:', err)
@@ -119,6 +125,30 @@ export async function POST(request: NextRequest) {
       include: { items: true },
     })
     orderId = order.id
+
+    // Descontar unidades del stock de cada producto en la base de datos
+    for (const item of clientItems) {
+      const dbProduct = products.find((p) => p.id === item.id || (p as any).slug === item.id)
+      if (dbProduct) {
+        const currentStock = (dbProduct as any).stockQuantity ?? 10
+        const newStock = Math.max(0, currentStock - item.quantity)
+        try {
+          await prisma.product.update({
+            where: { id: dbProduct.id },
+            data: {
+              stockQuantity: newStock,
+              inStock: newStock > 0,
+            },
+          })
+        } catch (updateErr) {
+          console.error(`[Order Stock] Error actualizando stock de ${dbProduct.id}:`, updateErr)
+        }
+      }
+    }
+
+    revalidatePath('/', 'layout')
+    revalidatePath('/tienda')
+    revalidatePath('/panel-control')
   } catch (err) {
     console.error('Error creando orden en DB (continuando con notificaciones):', err)
   }
